@@ -1,10 +1,22 @@
+import { Route, Routes } from "react-router";
 import "./App.css";
+import ProductList from "./components/ProductList";
 import Products from "./components/Products";
 
 function App() {
   return (
+    // <>
+    //   <Products></Products>
+    //   {/* <ProductList></ProductList> */}
+    // </>
     <>
-      <Products></Products>
+      <Routes>
+        <Route path="/" element={<Products></Products>}></Route>
+        <Route
+          path="/product-list"
+          element={<ProductList></ProductList>}
+        ></Route>
+      </Routes>
     </>
   );
 }

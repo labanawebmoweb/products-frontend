@@ -36,12 +36,15 @@ export const loadOptions = async (
     value: p.id,
     label: p.name,
   }));
+  console.log("newOptions", newOptions);
 
-  const loadedCount = loadedOptions.length + newOptions.length;
+  // const loadedCount = loadedOptions.length + newOptions.length;
 
   return {
     options: newOptions,
-    hasMore: loadedCount < total,
+    // hasMore: loadedCount < total,
+    hasMore: currentPage * backendLimit < total,
+
     additional: {
       page: currentPage + 1,
     },
