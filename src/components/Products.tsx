@@ -29,7 +29,8 @@ const validationSchema = Yup.object({
     .required("Batch number is required"),
   quantity: Yup.number()
     .typeError("Quantity must be a number")
-    .min(1, "Quantity must be at least 1")
+    .positive("Quantity must be greater than zero")
+    .integer("Quantity must be an integer")
     .required("Quantity is required"),
   expireDate: Yup.date()
     .min(new Date(), "Expire date cannot be in the past")
@@ -185,12 +186,31 @@ const Products: React.FC = () => {
 
                   <div>
                     <label className="block mb-1 font-semibold">Quantity</label>
-                    <Field
-                      type="text"
+                    {/* <Field
+                      type="number"
                       name="quantity"
                       placeholder="Quantity"
                       className=" p-2 border border-gray-300 rounded"
-                    />
+                    /> */}
+                    <Field name="quantity">
+                      {({ field, form }) => (
+                        <input
+                          {...field}
+                          type="text"
+                          placeholder="Quantity"
+                          className="p-2 border border-gray-300 rounded"
+                          min="1" // prevents negative selection
+                          onChange={(e) => {
+                            const val = e.target.value;
+
+                            // remove negative or non-digits
+                            const onlyPositives = val.replace(/\D/g, "");
+
+                            form.setFieldValue("quantity", onlyPositives);
+                          }}
+                        />
+                      )}
+                    </Field>
                     <ErrorMessage
                       name="quantity"
                       component="div"
@@ -465,6 +485,7 @@ const Products: React.FC = () => {
                 </tr>
               ))}
             </tbody>
+
             {/* 
 
  */}
