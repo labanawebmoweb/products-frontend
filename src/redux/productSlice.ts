@@ -22,9 +22,13 @@ const productSlice = createSlice({
     addProduct: (state, action) => {
       state.items.push(action.payload);
     },
+    // updateProduct: (state, action) => {
+    //   const { index, data } = action.payload;
+    //   state.items[index] = data;
+    // },
     updateProduct: (state, action) => {
-      const { index, data } = action.payload;
-      state.items[index] = data;
+      const { index, updated } = action.payload;
+      state.items[index] = updated;
     },
 
     deleteProduct: (state, action) => {

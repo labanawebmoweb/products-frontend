@@ -8,10 +8,15 @@ import { AsyncPaginate } from "react-select-async-paginate";
 // import { loadOptions } from "../../src/loadOptions";
 import { loadOptions, type OptionType } from "../../src/loadOptions";
 import { useDispatch, useSelector } from "react-redux";
-import { addProduct, deleteProduct } from "../redux/productSlice";
+import {
+  addProduct,
+  deleteProduct,
+  updateProduct,
+} from "../redux/productSlice";
 import type { RootState } from "../redux/store";
 import ProductList from "./ProductList";
 import { Link } from "react-router";
+import { useState } from "react";
 
 const validationSchema = Yup.object({
   // name: Yup.object().required("Product name is required"),
@@ -53,6 +58,47 @@ const Products: React.FC = () => {
     resetForm();
   };
   const products = useSelector((state: RootState) => state.products.items);
+  //
+  //
+  //
+  //
+  const [editIndex, setEditIndex] = useState<number | null>(null);
+  const [editData, setEditData] = useState<any>(null);
+
+  //
+  const startEdit = (index: number, item: any) => {
+    setEditIndex(index);
+    setEditData({
+      name: item.name ? { label: item.name, value: item.name } : null,
+      batchNo: item.batchNo,
+      quantity: item.quantity,
+      expireDate: item.expireDate ? new Date(item.expireDate) : new Date(),
+    });
+  };
+
+  const saveEdit = () => {
+    if (editIndex === null || !editData) return;
+
+    dispatch(
+      updateProduct({
+        index: editIndex,
+        updated: {
+          name: editData.name?.label ?? "",
+          batchNo: editData.batchNo,
+          quantity: Number(editData.quantity),
+          expireDate: editData.expireDate
+            ? editData.expireDate.toISOString().split("T")[0]
+            : "",
+        },
+      })
+    );
+
+    setEditIndex(null);
+    setEditData(null);
+  };
+  //
+  //
+  //
 
   return (
     <>
@@ -63,7 +109,7 @@ const Products: React.FC = () => {
               name: null,
               batchNo: "",
               quantity: "",
-              expireDate: new Date(),
+              expireDate: null,
             }}
             validationSchema={validationSchema}
             onSubmit={handleSubmit}
@@ -87,10 +133,7 @@ const Products: React.FC = () => {
                       value={values.name}
                       loadOptions={loadOptions}
                       // onChange={setValue}
-                      onChange={(selected) => {
-                        console.log("selected", selected);
-                        setFieldValue("name", selected);
-                      }}
+                      onChange={(selected) => setFieldValue("name", selected)}
                       additional={{ page: 1 }}
                       debounceTimeout={100}
                     />
@@ -143,7 +186,7 @@ const Products: React.FC = () => {
                   <div>
                     <label className="block mb-1 font-semibold">Quantity</label>
                     <Field
-                      type="number"
+                      type="text"
                       name="quantity"
                       placeholder="Quantity"
                       className=" p-2 border border-gray-300 rounded"
@@ -185,69 +228,249 @@ const Products: React.FC = () => {
                     Add
                   </button>
                 </Form>
-                {/* SHOW DATA BELOW FORM */}
               </div>
             )}
           </Formik>
         </div>
       </div>
-      {products.length === 1 ? (
-        // <p className="text-gray-500">No products added yet.</p>
-        <table className=" m-10">
-          <tbody>
-            {products.map((item, index) => (
-              <tr key={index} className="text-center">
-                <td className="border p-2">{item.name}</td>
-                <td className="border p-2">{item.batchNo}</td>
-                <td className="border p-2">{item.quantity}</td>
-                <td className="border p-2">{item.expireDate}</td>
-                <td className="border p-2">
-                  <button
-                    className="bg-red-500 text-white px-3 py-1 rounded"
-                    onClick={() => dispatch(deleteProduct(index))}
-                    disabled
-                  >
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      ) : (
-        <table className=" m-10">
-          {/* className="w-full border-collapse border border-gray-300" */}
-          {/* <thead>
-            <tr className="bg-gray-100">
-              <th className="border p-2">Name</th>
-              <th className="border p-2">Batch No</th>
-              <th className="border p-2">Quantity</th>
-              <th className="border p-2">Expire Date</th>
-            </tr>
-          </thead> */}
+      {/* PRODUCT LIST BELOW FORM */}
+      <div className="m-10">
+        <h2 className="text-xl font-bold mb-4">Product List</h2>
 
-          <tbody>
-            {products.map((item, index) => (
-              <tr key={index} className="text-center">
-                <td className="border p-2">{item.name}</td>
-                <td className="border p-2">{item.batchNo}</td>
-                <td className="border p-2">{item.quantity}</td>
-                <td className="border p-2">{item.expireDate}</td>
-                <td className="border p-2">
-                  {" "}
-                  <button
-                    className="bg-red-500 text-white px-3 py-1 rounded"
-                    onClick={() => dispatch(deleteProduct(index))}
-                  >
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+        {products.length === 1 ? (
+          // <p className="text-gray-500">No products added yet.</p>
 
+          <table className=" border">
+            <tbody>
+              {products.map((item, index) => (
+                <tr key={index} className="text-center">
+                  {/* PRODUCT NAME */}
+                  <td className="border p-2">
+                    {editIndex === index ? (
+                      <AsyncPaginate
+                        value={editData.name}
+                        loadOptions={loadOptions}
+                        onChange={(selected) =>
+                          setEditData({ ...editData, name: selected })
+                        }
+                        additional={{ page: 1 }}
+                        debounceTimeout={100}
+                      />
+                    ) : (
+                      item?.name ?? "-"
+                    )}
+                  </td>
+
+                  {/* BATCH NO */}
+                  <td className="border p-2">
+                    {editIndex === index ? (
+                      <input
+                        type="text"
+                        className="p-2 border rounded"
+                        value={`#${editData.batchNo}`}
+                        onChange={(e) => {
+                          const raw = e.target.value.replace("#", "");
+                          const onlyNumbers = raw.replace(/\D/g, "");
+                          setEditData({ ...editData, batchNo: onlyNumbers });
+                        }}
+                      />
+                    ) : (
+                      `#${item?.batchNo ?? "-"}`
+                    )}
+                  </td>
+
+                  {/* QUANTITY */}
+                  <td className="border p-2">
+                    {editIndex === index ? (
+                      <input
+                        type="number"
+                        className="p-2 border rounded"
+                        value={editData.quantity}
+                        onChange={(e) =>
+                          setEditData({ ...editData, quantity: e.target.value })
+                        }
+                      />
+                    ) : (
+                      item?.quantity ?? "-"
+                    )}
+                  </td>
+
+                  {/* EXPIRE DATE */}
+                  <td className="border p-2">
+                    {editIndex === index ? (
+                      <DatePicker
+                        selected={editData.expireDate}
+                        onChange={(date) =>
+                          setEditData({ ...editData, expireDate: date })
+                        }
+                        dateFormat="dd/MM/yyyy"
+                        className="p-2 border rounded"
+                        minDate={new Date()}
+                      />
+                    ) : (
+                      item?.expireDate ?? "-"
+                    )}
+                  </td>
+
+                  {/* ACTION BUTTONS */}
+                  <td className="border p-2 space-x-2">
+                    {editIndex === index ? (
+                      <>
+                        <button
+                          onClick={saveEdit}
+                          className="px-3 py-1 bg-green-600 text-white rounded"
+                        >
+                          Update
+                        </button>
+                        <button
+                          onClick={() => setEditIndex(null)}
+                          className="px-3 py-1 bg-gray-600 text-white rounded"
+                        >
+                          Cancel
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          onClick={() => startEdit(index, item)}
+                          className="px-3 py-1 bg-yellow-600 text-white rounded"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => dispatch(deleteProduct(index))}
+                          className="px-3 py-1 bg-red-600 text-white rounded"
+                          disabled
+                        >
+                          Delete
+                        </button>
+                      </>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <table className=" border">
+            {/* 
+
+ */}
+
+            <tbody>
+              {products.map((item, index) => (
+                <tr key={index} className="text-center">
+                  {/* PRODUCT NAME */}
+                  <td className="border p-2">
+                    {editIndex === index ? (
+                      <AsyncPaginate
+                        value={editData.name}
+                        loadOptions={loadOptions}
+                        onChange={(selected) =>
+                          setEditData({ ...editData, name: selected })
+                        }
+                        additional={{ page: 1 }}
+                        debounceTimeout={100}
+                      />
+                    ) : (
+                      item?.name ?? "-"
+                    )}
+                  </td>
+
+                  {/* BATCH NO */}
+                  <td className="border p-2">
+                    {editIndex === index ? (
+                      <input
+                        type="text"
+                        className="p-2 border rounded"
+                        value={`#${editData.batchNo}`}
+                        onChange={(e) => {
+                          const raw = e.target.value.replace("#", "");
+                          const onlyNumbers = raw.replace(/\D/g, "");
+                          setEditData({ ...editData, batchNo: onlyNumbers });
+                        }}
+                      />
+                    ) : (
+                      `#${item?.batchNo ?? "-"}`
+                    )}
+                  </td>
+
+                  {/* QUANTITY */}
+                  <td className="border p-2">
+                    {editIndex === index ? (
+                      <input
+                        type="number"
+                        className="p-2 border rounded"
+                        value={editData.quantity}
+                        onChange={(e) =>
+                          setEditData({ ...editData, quantity: e.target.value })
+                        }
+                      />
+                    ) : (
+                      item?.quantity ?? "-"
+                    )}
+                  </td>
+
+                  {/* EXPIRE DATE */}
+                  <td className="border p-2">
+                    {editIndex === index ? (
+                      <DatePicker
+                        selected={editData.expireDate}
+                        onChange={(date) =>
+                          setEditData({ ...editData, expireDate: date })
+                        }
+                        dateFormat="dd/MM/yyyy"
+                        className="p-2 border rounded"
+                        minDate={new Date()}
+                      />
+                    ) : (
+                      item?.expireDate ?? "-"
+                    )}
+                  </td>
+
+                  {/* ACTION BUTTONS */}
+                  <td className="border p-2 space-x-2">
+                    {editIndex === index ? (
+                      <>
+                        <button
+                          onClick={saveEdit}
+                          className="px-3 py-1 bg-green-600 text-white rounded"
+                        >
+                          Update
+                        </button>
+                        <button
+                          onClick={() => setEditIndex(null)}
+                          className="px-3 py-1 bg-gray-600 text-white rounded"
+                        >
+                          Cancel
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          onClick={() => startEdit(index, item)}
+                          className="px-3 py-1 bg-yellow-600 text-white rounded"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => dispatch(deleteProduct(index))}
+                          className="px-3 py-1 bg-red-600 text-white rounded"
+                        >
+                          Delete
+                        </button>
+                      </>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+            {/* 
+
+ */}
+          </table>
+        )}
+      </div>
       <Link to="/product-list">
         <button className="m-10 p-2 bg-blue-600 hover:bg-blue-700 text-white rounded font-semibold">
           Submit

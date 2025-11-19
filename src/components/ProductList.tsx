@@ -24,10 +24,10 @@ const ProductList = () => {
           <tbody>
             {products.map((item, index) => (
               <tr key={index} className="text-center">
-                <td className="border p-2">{item.name}</td>
-                <td className="border p-2">{item.batchNo}</td>
-                <td className="border p-2">{item.quantity}</td>
-                <td className="border p-2">{item.expireDate}</td>
+                <td className="border p-2">{item?.name}</td>
+                <td className="border p-2">{item?.batchNo}</td>
+                <td className="border p-2">{item?.quantity}</td>
+                <td className="border p-2">{item?.expireDate}</td>
               </tr>
             ))}
           </tbody>
